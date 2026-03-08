@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Life History | Ultimate Cloud Edition</title>
+    <style>
+        :root {
+            --bg-color: #f4f4f9; --card-bg: #ffffff; --text-color: #333333;
+            --accent-color: #27ae60; --input-border: #dddddd; --info-color: #3498db;
+            --danger-color: #e74c3c; --trophy-gold: #f1c40f;
+        }
+        [data-theme="dark"] {
+            --bg-color: #121212; --card-bg: #1e1e1e; --text-color: #e0e0e0;
+            --input-border: #444444;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: var(--bg-color); color: var(--text-color); margin: 0; transition: 0.3s; line-height: 1.6; }
+        header { background: #000; color: #fff; padding: 1.5rem; text-align: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+        .container { max-width: 850px; margin: 20px auto; background: var(--card-bg); padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        #eventList { position: relative; list-style: none; padding: 20px 0; }
+        #eventList::before { content: ''; position: absolute; left: 20px; top: 0; bottom: 0; width: 4px; background: var(--accent-color); opacity: 0.3; }
+        .milestone-item { position: relative; margin-left: 45px; margin-bottom: 35px; padding: 20px; border-radius: 8px; border: 1px solid var(--input-border); border-left: 8px solid var(--accent-color); transition: transform 0.2s; }
+        .milestone-item:hover { transform: translateX(5px); }
+        .milestone-item::after { content: ''; position: absolute; left: -33px; top: 20px; width: 16px; height: 16px; background: var(--card-bg); border: 4px solid var(--accent-color); border-radius: 50%; z-index: 1; }
+
+        .cat-Family { border-left-color: #e74c3c !important; }
+        .cat-Travel { border-left-color: #3498db !important; }
+        .cat-Career { border-left-color: #f1c40f !important; }
+        .cat-Health { border-left-color: #2ecc71 !important; }
+
+        .privacy-active .m-blur-target { filter: blur(12px); transition: 0.3s; pointer-events: none; }
+        .privacy-active .milestone-item:hover .m-blur-target { filter: blur(0); pointer-events: auto; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 15px; margin: 20px 0; }
+        .stat-card { background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; text-align: center; border-bottom: 3px solid var(--accent-color); }
+        .badge-case { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-bottom: 20px; }
+        .badge { padding: 6px 15px; border-radius: 20px; background: var(--trophy-gold); color: #000; font-weight: bold; font-size: 0.85rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+
+        .btn { cursor: pointer; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; color: #fff; transition: opacity 0.2s; }
+        input, select, textarea { padding: 12px; border-radius: 6px; border: 1px solid var(--input-border); background: var(--card-bg); color: var(--text-color); width: 100%; box-sizing: border-box; }
+        .mood-opt { cursor: pointer; font-size: 1.5rem; filter: grayscale(100%); transition: 0.2s; }
+        input[type="radio"]:checked + .mood-opt { filter: grayscale(0%); transform: scale(1.3); }
+
+        @media print { .no-print { display: none !important; } .container { box-shadow: none; width: 100%; border: none; } }
+    </style>
+</head>
+<body>
+
+<header class="no-print">
+    <h1>🌍 My Life History Archive</h1>
+    <div id="syncStatus" style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.8rem; margin-bottom: 10px;">
+        <span id="statusDot" style="width: 10px; height: 10px; background: #95a5a6; border-radius: 50%;"></span>
+        <span id="statusText">Connecting to Cloud...</span>
+    </div>
+    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+        <button onclick="toggleTheme()" class="btn" style="background: #444;">🌓 Dark Mode</button>
+        <button id="privacyBtn" class="btn" style="background: #6c757d;">🔒 Privacy Shield</button>
+        <button onclick="window.print()" class="btn" style="background: var(--info-color);">🖨️ Print Archive</button>
+    </div>
+</header>
+
+<main>
+    <section class="container no-print">
+        <div style="text-align: center;">
+            <div id="readTime" style="font-size: 0.85rem; margin-bottom: 10px; font-style: italic; opacity: 0.7;"></div>
+            <label for="birthDate">Set Birth Date for Age Tracker: </label>
+            <input type="date" id="birthDate" style="width: auto; display: inline-block;">
+        </div>
+    </section>
+
+    <section class="container no-print">
+        <div class="badge-case" id="badgeCase"></div>
+        <div class="stats-grid" id="statsDash"></div>
+        <div id="wordCloud" style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; padding: 15px; background: rgba(0,0,0,0.02); border-radius: 8px;"></div>
+    </section>
+
+    <section class="container no-print">
+        <div id="onThisDay" style="display:none; background: linear-gradient(to right, #6a11cb, #2575fc); color: white; padding: 20px; border-radius: 10px; margin-bottom: 20px;"></div>
+        <button id="randomBtn" class="btn" style="background: var(--accent-color); width: 100%; margin-bottom: 20px; font-size: 1.1rem;">🎲 Flashback: Relive a Memory</button>
+        
+        <form id="lifeForm" style="display: grid; gap: 15px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                <input type="date" id="eventDate" required>
+                <select id="eventCat">
+                    <option value="General">General Category</option>
+                    <option value="Family">❤️ Family</option>
+                    <option value="Travel">✈️ Travel</option>
+                    <option value="Career">💼 Career</option>
+                    <option value="Health">🍏 Health</option>
+                </select>
+            </div>
+            <textarea id="eventText" rows="3" placeholder="What happened today? Write your story..." required></textarea>
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                <div id="moodSelector" style="display: flex; gap: 15px;">
+                    <label><input type="radio" name="mood" value="😊" checked style="display:none"> <span class="mood-opt">😊</span></label>
+                    <label><input type="radio" name="mood" value="🤩" style="display:none"> <span class="mood-opt">🤩</span></label>
+                    <label><input type="radio" name="mood" value="😌" style="display:none"> <span class="mood-opt">😌</span></label>
+                    <label><input type="radio" name="mood" value="😢" style="display:none"> <span class="mood-opt">😢</span></label>
+                    <label><input type="radio" name="mood" value="😤" style="display:none"> <span class="mood-opt">😤</span></label>
+                </div>
+                <input type="file" id="eventImg" accept="image/*" style="width: auto;">
+            </div>
+            <button type="submit" class="btn" style="background: var(--accent-color); padding: 15px;">💾 Record Milestone</button>
+        </form>
+    </section>
+
+    <section class="container">
+        <div class="no-print" style="margin-bottom: 25px;">
+            <input type="text" id="search" placeholder="🔍 Search memories, dates, or emojis..." style="font-size: 1.1rem;">
+            <div style="display: flex; justify-content: space-between; margin-top: 15px;">
+                <button onclick="exportData()" class="btn" style="background: #8e44ad;">📥 Download Backup</button>
+                <button onclick="document.getElementById('importFile').click()" class="btn" style="background: #2980b9;">📤 Restore Data</button>
+                <input type="file" id="importFile" style="display:none" onchange="importData(event)">
+            </div>
+        </div>
+        <ul id="eventList"></ul>
+    </section>
+</main>
+
+<script>
+    'use strict';
+
+    // --- 1. CONFIGURATION ---
+    const DB_URL = "https://my-life-history-666e4-default-rtdb.firebaseio.com/history.json";
+    const APP_KEY = "1234"; 
+
+    // Access Control
+    if (sessionStorage.getItem('authenticated') !== 'true') {
+        const input = prompt("Please enter your secret pin to view your Life History:");
+        if (input !== APP_KEY) {
+            document.body.innerHTML = "<h1 style='text-align:center; margin-top:50px;'>⛔ Access Denied</h1>";
+        } else {
+            sessionStorage.setItem('authenticated', 'true');
+        }
+    }
+
+    let historyData = [];
+    const list = document.getElementById('eventList');
+    const form = document.getElementById('lifeForm');
+    const statusDot = document.getElementById('statusDot');
+    const statusText = document.getElementById('statusText');
+
+    // --- 2. CLOUD SYNC LOGIC ---
+    const setStatus = (type) => {
+        if (type === 'online') {
+            statusDot.style.background = '#2ecc71';
+            statusText.textContent = 'Cloud Synced';
+        } else if (type === 'syncing') {
+            statusDot.style.background = '#f1c40f';
+            statusText.textContent = 'Saving to Cloud...';
+        } else {
+            statusDot.style.background = '#e74c3c';
+            statusText.textContent = 'Offline / Error';
+        }
+    };
+
+    async function syncToCloud() {
+        setStatus('syncing');
+        try {
+            await fetch(DB_URL, {
+                method: 'PUT',
+                body: JSON.stringify(historyData)
+            });
+            setStatus('online');
+            render();
+        } catch (err) {
+            setStatus('offline');
+        }
+    }
+
+    async function loadFromCloud() {
+        try {
+            const response = await fetch(DB_URL);
+            const data = await response.json();
+            if (data) historyData = data;
+            render();
+            setStatus('online');
+        } catch (err) {
+            setStatus('offline');
+        }
+    }
+
+    // --- 3. UI FUNCTIONS ---
+    function toggleTheme() {
+        const d = document.documentElement;
+        d.hasAttribute('data-theme') ? d.removeAttribute('data-theme') : d.setAttribute('data-theme', 'dark');
+    }
+
+    document.getElementById('privacyBtn').addEventListener('click', (e) => {
+        const active = list.classList.toggle('privacy-active');
+        e.target.textContent = active ? "🔓 Privacy: ON" : "🔒 Privacy Shield";
+        e.target.style.background = active ? "var(--danger-color)" : "#6c757d";
+    });
+
+    // --- 4. CORE LOGIC ---
+    form.onsubmit = async (e) => {
+        e.preventDefault();
+        const file = document.getElementById('eventImg').files[0];
+
+        const commit = async (imgData = null) => {
+            historyData.push({
+                id: Date.now(),
+                date: document.getElementById('eventDate').value,
+                text: document.getElementById('eventText').value,
+                cat: document.getElementById('eventCat').value,
+                mood: document.querySelector('input[name="mood"]:checked').value,
+                img: imgData
+            });
+            await syncToCloud();
+            form.reset();
+        };
+
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = () => commit(reader.result);
+            reader.readAsDataURL(file);
+        } else { await commit(); }
+    };
+
+    function render(query = '') {
+        list.innerHTML = '';
+        const bDay = localStorage.getItem('user_bday');
+        
+        const filtered = historyData.filter(h => 
+            h.text.toLowerCase().includes(query.toLowerCase()) || 
+            h.cat.toLowerCase().includes(query.toLowerCase()) ||
+            h.mood === query || h.date.includes(query)
+        ).sort((a,b) => new Date(b.date) - new Date(a.date));
+
+        filtered.forEach((h) => {
+            const age = bDay ? Math.floor((new Date(h.date) - new Date(bDay)) / (1000*60*60*24*365.25)) : '?';
+            const li = document.createElement('li');
+            li.className = `milestone-item cat-${h.cat}`;
+            li.innerHTML = `
+                <div class="m-blur-target">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <span>
+                            <span style="font-size:1.4rem;">${h.mood}</span> 
+                            <strong>${new Date(h.date).toLocaleDateString()}</strong> 
+                            <span style="color:var(--info-color); font-weight:bold;">(Age: ${age})</span>
+                        </span>
+                        <button class="no-print" onclick="deleteItem(${h.id})" style="color:var(--danger-color); background:none; border:none; cursor:pointer;">Delete</button>
+                    </div>
+                    <p style="margin:10px 0;">${h.text}</p>
+                    ${h.img ? `<img src="${h.img}" style="max-width:100%; border-radius:8px; margin-top:10px;">` : ''}
+                </div>
+            `;
+            list.appendChild(li);
+        });
+        updateDashboard();
+        checkToday();
+    }
+
+    async function deleteItem(id) {
+        if(confirm("Permanently delete this memory?")) {
+            historyData = historyData.filter(h => h.id !== id);
+            await syncToCloud();
+        }
+    }
+
+    function updateDashboard() {
+        const stats = document.getElementById('statsDash');
+        const cats = ['Family', 'Travel', 'Career', 'Health'];
+        stats.innerHTML = `<div class="stat-card"><b>Total</b><br>${historyData.length}</div>` + 
+            cats.map(c => `<div class="stat-card"><b>${c}</b><br>${historyData.filter(h => h.cat === c).length}</div>`).join('');
+        
+        const words = historyData.map(h => h.text).join(' ').toLowerCase().match(/\b(\w{5,})\b/g) || [];
+        const counts = {}; words.forEach(w => counts[w] = (counts[w] || 0) + 1);
+        document.getElementById('wordCloud').innerHTML = Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,12)
+            .map(([w,c]) => `<span style="font-size:${1 + c*0.2}rem; opacity:0.8;">${w}</span>`).join('');
+            
+        const bc = document.getElementById('badgeCase');
+        bc.innerHTML = '';
+        if(historyData.length >= 1) bc.innerHTML += '<span class="badge">📜 Storyteller</span>';
+        if(historyData.filter(h => h.cat === 'Travel').length >= 5) bc.innerHTML += '<span class="badge">✈️ Explorer</span>';
+
+        const wordCount = historyData.map(h => h.text).join(' ').split(/\s+/).length;
+        document.getElementById('readTime').textContent = `📖 Estimated Read Time: ${Math.ceil(wordCount/200)} min`;
+    }
+
+    function checkToday() {
+        const now = new Date();
+        const match = historyData.filter(h => {
+            const d = new Date(h.date);
+            return d.getMonth() === now.getMonth() && d.getDate() === now.getDate();
+        });
+        const box = document.getElementById('onThisDay');
+        if(match.length) {
+            box.style.display = 'block';
+            box.innerHTML = `<h3>📅 On This Day...</h3>` + match.map(m => `<p><b>${new Date(m.date).getFullYear()}:</b> ${m.text}</p>`).join('');
+        } else box.style.display = 'none';
+    }
+
+    // --- 5. INITIALIZATION ---
+    document.getElementById('search').oninput = (e) => render(e.target.value);
+    document.getElementById('birthDate').onchange = (e) => { 
+        localStorage.setItem('user_bday', e.target.value); 
+        render(); 
+    };
+    document.getElementById('birthDate').value = localStorage.getItem('user_bday');
+
+    loadFromCloud();
+</script>
+</body>
+</html>
